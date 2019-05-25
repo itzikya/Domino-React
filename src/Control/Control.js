@@ -1,5 +1,6 @@
 import React, {Component} from "react";
 
+import "./Control.css";
 
 class Control extends Component {
     constructor(props) {
