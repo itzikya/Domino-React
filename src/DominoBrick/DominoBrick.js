@@ -1,4 +1,6 @@
 import React, {Component} from "React";
+import HalfBrick from "./HalfBrick";
+
 import "./DominoBrick.css";
 
 class DominoBrick extends Component {
@@ -7,13 +9,22 @@ class DominoBrick extends Component {
         this.state = {
 
         };
+
+        this.handleClick = this.handleClick.bind(this);
     }
+
+    handleClick() {
+
+    }
+
     render() {
         return (
-            <main className="flex-container">
-                <div>{this.props.number1}</div>
-                <div>{this.props.number2}</div>
-            </main>
+            <div className="domino-brick">
+                <HalfBrick className={`brickT${this.props.numbers[0]}`} position="top" number={this.props.numbers[0]}/>
+                <span className="domino-line" />
+                <HalfBrick className={`brickB${this.props.numbers[1]}`} position="bottom" number={this.props.numbers[1]}/>
+                
+            </div>
         );
     }
 }
