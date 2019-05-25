@@ -14,15 +14,15 @@ class DominoBrick extends Component {
     }
 
     handleClick() {
-
+        this.props.handleClick(this.props.numbers);
     }
 
     render() {
         return (
-            <div className="domino-brick">
-                <HalfBrick className={`brickT${this.props.numbers[0]}`} position="top" number={this.props.numbers[0]}/>
+            <div onClick={this.handleClick} className="domino-brick">
+                <HalfBrick className={`brickT${this.props.numbers[0]} top`} position="top" number={this.props.numbers[0]}/>
                 <span className="domino-line" />
-                <HalfBrick className={`brickB${this.props.numbers[1]}`} position="bottom" number={this.props.numbers[1]}/>
+                <HalfBrick className={`brickB${this.props.numbers[1]} bottom`} position="bottom" number={this.props.numbers[1]}/>
                 
             </div>
         );
