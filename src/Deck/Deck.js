@@ -12,6 +12,7 @@ class Deck extends Component {
         };
 
         this.handleClick = this.handleClick.bind(this);
+        this.removeBrickFromHand = this.removeBrickFromHand.bind(this);
     }
 
     static getDerivedStateFromProps(nextProps, prevState) {
@@ -27,6 +28,29 @@ class Deck extends Component {
 
     handleClick(brick) {
         this.props.brickWasChosen(brick);
+
+        //if brick was add to the board, then we will need to use the next function
+        this.removeBrickFromHand(brick);
+    }
+
+    removeBrickFromHand(brickToRemove)
+    {
+        let hand = this.state.myDeck;
+        for(let i = 0; i < hand.length; i++)
+        {
+            if(this.brickCompare(hand[i], brickToRemove))
+            {
+                hand.splice(i,1);
+                break;
+            }
+        }
+
+        this.setState({myDeck: hand});
+    }
+
+    brickCompare(brick1, brick2)
+    {
+        return brick1[0] === brick2[0] && brick1[1] === brick2[1];
     }
 
     render() {
