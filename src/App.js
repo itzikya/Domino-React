@@ -15,6 +15,8 @@ class App extends Component {
             numOfPlayers: 1, 
             isGameStarted: false,
             //isMove: false,
+            selectedBrick: { numbers: [],
+                            status: ""},
             player1Deck: [],
             //chosenBrick: null,
             boardBricks: [],
@@ -33,8 +35,12 @@ class App extends Component {
     this.handlePlayerDeck = this.handlePlayerDeck.bind(this);
     this.handleClickedBrick = this.handleClickedBrick.bind(this);
     this.dealRandomBricksToPlayer = this.dealRandomBricksToPlayer.bind(this);
-    this.isMoveLegal = this.isMoveLegal.bind(this);
+    this.isMoveLegal = this.addBrickToBoard.bind(this);
     this.handleDrawClick = this.handleDrawClick.bind(this);
+    this.handleMouseOver = this.handleMouseOver.bind(this);
+    this.handleMouseOut = this.handleMouseOut.bind(this);
+    this.deepClone = this.deepClone.bind(this);
+    this.isLegalMove = this.isLegalMove.bind(this);
 
     }
 /*
@@ -81,21 +87,96 @@ class App extends Component {
         });
     }
 
+    handleMouseOut() { 
+        this.setState(() => {
+            return {selectedBrick: {numbers: [],
+                                        status: "neutral"}}})
+    }
+
+    handleMouseOver(brick) {
+        let returnedValue = this.isLegalMove(brick)
+
+        if(!returnedValue) {
+            this.setState(() => {
+                return {selectedBrick: {numbers: brick,
+                                            status: "invalid"}}})
+        }
+        else {
+            this.setState(() => {
+                return {selectedBrick: {numbers: brick,
+                                            status: "valid"}}})}
+
+        console.log(this.state);
+    }
+
     handleClickedBrick(brick) {
-        this.isMoveLegal(brick)
+        let returnedValue = this.addBrickToBoard(brick)
         /*
         {
             let myBoard = this.state.myBoard;
             myBoard.push(brick);
         }
 */
+        this.setState({
+        //isMove: true,
+        myBoard: returnedValue.myBoard,
+        player1Deck: returnedValue.player1Deck,
+        //activeBricks: activeBricks
+        })
         
     }
 
-    isMoveLegal(brick) {
-        let myBoard = this.state.myBoard;
+    isLegalMove(i_Brick)
+    {
+        let myBoard = this.deepClone(this.state.myBoard);
+
+        if(myBoard.length === 0)
+        {
+           return true;
+        }
+
+        for(let i = 0 ; i < myBoard.length ; i++) 
+        {
+            for(let j = 0 ; j < myBoard[i].length ; j++) 
+            {
+                let currBrick = myBoard[i][j];
+                if(currBrick.occupied && currBrick.activeTop && currBrick.brick[0] == i_Brick[1]) 
+                {
+                    return true;
+                }
+
+                if(currBrick.occupied && currBrick.activeBottom && currBrick.brick[1] == i_Brick[0]) 
+                {
+                    return true;
+                }
+
+                if(currBrick.occupied && currBrick.activeTop && currBrick.brick[0] == i_Brick[0])
+                {
+                    return true;
+                }
+
+                if(currBrick.occupied && currBrick.activeBottom && currBrick.brick[1] == i_Brick[1])
+                {
+                    return true;
+                }
+
+            }
+        }
+
+        return false;
+    }
+
+    deepClone(x)
+    {
+        return JSON.parse(JSON.stringify(x));
+    }
+
+    //*****changeToNewOne********/
+    addBrickToBoard(brick) {
+        
+        let myBoard = this.deepClone(this.state.myBoard);
         let player1Deck = this.state.player1Deck;
-        let activeBricks = this.state.activeBricks;
+        //let activeBricks = this.state.activeBricks;
 
         if(myBoard.length === 0)
         {
@@ -235,22 +316,17 @@ class App extends Component {
                         found = true;
 
                     }
-                    ///other two positions need to be implemented are the same but turn upside down the brick
-                    //just send it with opposite sides
                 }
             }
         }
 
         console.log(myBoard);
-        this.setState({
-            //isMove: true,
-            myBoard: myBoard,
-            player1Deck: player1Deck,
-            //activeBricks: activeBricks
+        return({myBoard: myBoard,
+                player1Deck: player1Deck
         })
-
     }
 
+    /*******changeToNewOne*** */
     handleDrawClick() {
         let playerDeck = this.state.player1Deck;
         let myPile = this.state.myPile;
@@ -270,7 +346,10 @@ class App extends Component {
     render() {
         const myDeck = <Deck 
                         handleClickedBrick={this.handleClickedBrick} 
+                        handleMouseOver={this.handleMouseOver}
+                        handleMouseOut={this.handleMouseOut}
                         myDeck={this.state.player1Deck} 
+                        selectedBrick={this.state.selectedBrick}
                         />
 
         const myBoard = <Board 
@@ -291,6 +370,9 @@ class App extends Component {
                         <Control func={this.handleGame}/>
                         <div className="draw">
                             <button className="my-button" onClick={this.handleDrawClick}>Draw</button>
+                        </div>
+                        <div>
+                            <button className="my-button">Undo</button>
                         </div>
                         {this.state.isGameStarted ? myDeck : null}
                     </div>
