@@ -10,19 +10,23 @@ class DominoBrick extends Component {
 
         };
 
-        this.handleClick = this.handleClick.bind(this);
+        this.handleClickedBrick = this.handleClickedBrick.bind(this);
     }
 
-    handleClick() {
-        this.props.handleClick(this.props.numbers);
+    handleClickedBrick() {
+        this.props.handleClickedBrick(this.props.numbers);
     }
 
     render() {
         return (
-            <div onClick={this.handleClick} className="domino-brick">
-                <HalfBrick className={`brickT${this.props.numbers[0]} top`} position="top" number={this.props.numbers[0]}/>
+            <div onClick={this.handleClickedBrick} className="domino-brick">
+                <HalfBrick className={`brickT${this.props.numbers[0]} top`} 
+                            position="top" 
+                            number={/*this.props.upSideDown ? this.props.numbers[1] : */this.props.numbers[0]}/>
                 <span className="domino-line" />
-                <HalfBrick className={`brickB${this.props.numbers[1]} bottom`} position="bottom" number={this.props.numbers[1]}/>
+                <HalfBrick className={`brickB${this.props.numbers[1]} bottom`} 
+                            position="bottom" 
+                            number={/*this.props.upSideDown ? this.props.numbers[0] : */this.props.numbers[1]}/>
                 
             </div>
         );

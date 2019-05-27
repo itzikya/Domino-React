@@ -12,7 +12,7 @@ class HalfBrick extends Component {
     }
 
     isDominoDot(index) {
-        switch(this.state.number) {
+        switch(this.props.number) {
             case 0:
                 return false;
                 break;
