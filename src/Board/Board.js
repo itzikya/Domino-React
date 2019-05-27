@@ -40,7 +40,7 @@ class Board extends Component {
                     if(column.occupied) {
                         return(
                             <td>
-                            <DominoBrick numbers={column.brick} upSideDown={column.upSideDown} className={column.direction} />
+                            <DominoBrick status="neutral" numbers={column.brick} upSideDown={column.upSideDown} className={column.direction} />
                             </td>)
                     }
                     else {
