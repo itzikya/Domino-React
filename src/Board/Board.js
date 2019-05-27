@@ -15,8 +15,6 @@ class Board extends Component {
     }
 
     static getDerivedStateFromProps(nextProps, prevState) {
-        {console.log(prevState.isMove)}
-        {console.log(nextProps.isMove)}
         if(prevState.isMove !== nextProps.isMove)
         {
             return {
@@ -31,31 +29,57 @@ class Board extends Component {
 
 
     renderTable() {
-        //return this.state.table.map((brick) => {
+        let myTable = this.props.myBoard;
+        console.log(myTable);
+
+        //let value = [];
+        return myTable.map(row => {
             return (
                 <tr>
-                    <td>
-                        {console.log(this.props.brickToInsert)} 
-                        {console.log(this.state.isMove)}
-                        {this.state.isMove ? <DominoBrick numbers={this.props.brickToInsert} /> : null }
-                    </td>
-                </tr>
-            )
-        }//)
-
-    //}
+                {row.map(column => {
+                    if(column.occupied) {
+                        return(
+                            <td>
+                            <DominoBrick numbers={column.brick} upSideDown={column.upSideDown} className={column.direction} />
+                            </td>)
+                    }
+                    else {
+                        return(
+                        <td></td>)
+                    }})}
+                </tr>)
+            console.log(value);
+            return value;
+        })
+        /*
+            <tr>
+                { row.map(column => {
+                    console.log(column);
+                    if(column.occupied) {
+                        <td>
+                            <DominoBrick numbers={column.brick} className={column.direction} />
+                        </td>
+                    }
+                    else {
+                        <td>
+                        </td>
+                    }
+                })}
+            </tr>
+        })
+        console.log(value);
+        */
+    }
 
     render() {
         
         return (
-            <div className="board-container">
-                <div className="board">
-                    <table>
-                        <tbody>
-                            {this.renderTable()}
-                        </tbody>
-                    </table>
-                </div>
+            <div className="board">
+                <table>
+                    <tbody>
+                        {this.renderTable()}
+                    </tbody>
+                </table>
             </div>
         );
     }

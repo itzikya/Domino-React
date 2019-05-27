@@ -36,3 +36,12 @@ body {
 html, body {
     height: 100%;
 }
+
+td {
+    padding: 0px;
+}
+
+.right-nav {
+    display: flex;
+    flex-direction: column;
+}
