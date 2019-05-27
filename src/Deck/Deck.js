@@ -26,18 +26,15 @@ class Deck extends Component {
     }
 
     handleClickedBrick(brick) {
-        console.log(this.props.handleClickedBrick);
         this.props.handleClickedBrick(brick);
     }
 
     render() {
-        console.log(this.state.myDeck);
         const pickedUpBricks = this.props.myDeck.map(brick => <DominoBrick 
             handleClickedBrick={this.handleClickedBrick}
             numbers={brick}
             key={`brick${brick[0]}${brick[1]}`} 
             />)
-            console.log(pickedUpBricks);
         
         return (
             <div className="deck">

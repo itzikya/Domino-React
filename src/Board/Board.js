@@ -29,8 +29,9 @@ class Board extends Component {
 
 
     renderTable() {
+        console.log(this.props);
         let myTable = this.props.myBoard;
-        console.log(myTable);
+        //console.log(myTable);
 
         //let value = [];
         return myTable.map(row => {
@@ -48,27 +49,8 @@ class Board extends Component {
                         <td></td>)
                     }})}
                 </tr>)
-            console.log(value);
-            return value;
         })
-        /*
-            <tr>
-                { row.map(column => {
-                    console.log(column);
-                    if(column.occupied) {
-                        <td>
-                            <DominoBrick numbers={column.brick} className={column.direction} />
-                        </td>
-                    }
-                    else {
-                        <td>
-                        </td>
-                    }
-                })}
-            </tr>
-        })
-        console.log(value);
-        */
+       
     }
 
     render() {
