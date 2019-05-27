@@ -7,6 +7,24 @@ import Control from "./Control/Control";
 
 import "./App.css";
 
+class History 
+{
+    constructor (num, gameStart, p1Deck, boardB, pd, board, pile)
+    {
+        this.numOfPlayers = this.deepClone(num);
+        this.isGameStarted = this.deepClone(gameStart);
+        this.player1Deck = this.deepClone(p1Deck);
+        this.boardBricks = this.deepClone(boardB);
+        this.playerDeck = this.deepClone(pd);
+        this.myBoard = this.deepClone(board);
+        this.myPile = this.deepClone(pile);
+    }
+
+    deepClone(x)
+    {
+        return JSON.parse(JSON.stringify(x));
+    }
+}
 
 class App extends Component {
     constructor() {
@@ -14,21 +32,14 @@ class App extends Component {
         this.state = {
             numOfPlayers: 1, 
             isGameStarted: false,
-            //isMove: false,
             selectedBrick: { numbers: [],
                             status: ""},
             player1Deck: [],
-            //chosenBrick: null,
             boardBricks: [],
             playerDeck: [],
             myBoard: [],
-            //activeBricks: [],
-            myPile: [
-                /*[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6],
-                [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [2, 2], 
-                [2, 3], [2, 4], [2, 5], [2, 6], [3, 3], [3, 4], [3, 5], 
-                [3, 6], [4, 4], [4, 5], [4, 6], [5, 5], [5, 6], [6, 6],
-            */],
+            myPile: [],
+            history: [],
         };
 
     this.handleGame = this.handleGame.bind(this);
@@ -41,13 +52,42 @@ class App extends Component {
     this.handleMouseOut = this.handleMouseOut.bind(this);
     this.deepClone = this.deepClone.bind(this);
     this.isLegalMove = this.isLegalMove.bind(this);
+    this.isLegalDraw = this.isLegalDraw.bind(this);
+    this.doPrev = this.doPrev.bind(this);
+    this.getCurrentGameState = this.getCurrentGameState.bind(this);
+    this.saveCurrentStateForHistory = this.saveCurrentStateForHistory.bind(this);
+    this.handelUndoClick = this.handelUndoClick.bind(this);
+    
+    }
 
+    getCurrentGameState()
+    {
+        let currentGameState = new History(this.state.numOfPlayers, this.state.isGameStarted, this.state.player1Deck, this.state.boardBricks, this.state.playerDeck, this.state.myBoard, this.state.myPile);
+        return currentGameState;
     }
-/*
-    componentDidMount() {
-        this.dealRandomBricksToPlayer();
+
+    doPrev()
+    {
+        if(this.state.history.length <= 1)
+        {
+            console.log("No Prev moves avilable");
+            return;
+        }
+
+        let prev = this.state.history.pop();
+        console.log("do prev length after", this.state.history.length);
+
+        this.setState({
+            numOfPlayers: prev.numOfPlayers, 
+            isGameStarted: prev.isGameStarted,
+            player1Deck: prev.player1Deck,
+            boardBricks: prev.boardBricks,  
+            playerDeck: prev.playerDeck,
+            myBoard: prev.myBoard,
+            myPile: prev.myPile,
+        });
     }
-*/
+
     dealRandomBricksToPlayer() {
         let myPile = [
                     [0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6],
@@ -79,6 +119,7 @@ class App extends Component {
         this.setState({
             isGameStarted: info.isGameStarted
         });
+        this.saveCurrentStateForHistory();
     }
 
     handlePlayerDeck(deck) {
@@ -109,20 +150,17 @@ class App extends Component {
         console.log(this.state);
     }
 
-    handleClickedBrick(brick) {
-        let returnedValue = this.addBrickToBoard(brick)
-        /*
+    handleClickedBrick(brick) 
+    {
+        if(this.isLegalMove(brick))
         {
-            let myBoard = this.state.myBoard;
-            myBoard.push(brick);
+            let returnedValue = this.addBrickToBoard(brick);
+            
+            this.setState({
+                myBoard: returnedValue.myBoard,
+                player1Deck: returnedValue.player1Deck,})
+            
         }
-*/
-        this.setState({
-        //isMove: true,
-        myBoard: returnedValue.myBoard,
-        player1Deck: returnedValue.player1Deck,
-        //activeBricks: activeBricks
-        })
         
     }
 
@@ -177,7 +215,12 @@ class App extends Component {
         let myBoard = this.deepClone(this.state.myBoard);
         let player1Deck = this.state.player1Deck;
         //let activeBricks = this.state.activeBricks;
-
+        if(!this.isLegalMove(brick))
+        {
+            return;
+        }
+        
+        this.saveCurrentStateForHistory();
         if(myBoard.length === 0)
         {
             let brickToInsert = {brick: brick,
@@ -190,7 +233,6 @@ class App extends Component {
                                     column: 0}} 
             myBoard.push([brickToInsert]);
             player1Deck = player1Deck.filter((item) => item !== brick);
-            //activeBricks.push(brickToInsert);
         }
         else {
             let found = false;
@@ -326,13 +368,49 @@ class App extends Component {
         })
     }
 
+    isLegalDraw()
+    {
+        let canDrawTile = true;
+        for (const tile of this.state.player1Deck)
+        {
+           if(this.isLegalMove(tile))
+           {
+            canDrawTile = false;
+            break;
+           }
+        }
+
+        return canDrawTile;
+    }
     /*******changeToNewOne*** */
-    handleDrawClick() {
+
+    saveCurrentStateForHistory()
+    {
+        let myHistory = this.deepClone(this.state.history); 
+        myHistory.push(this.getCurrentGameState());
+        this.setState(() => {
+            return {
+                history: myHistory,
+            }
+        })
+
+    }
+
+    handleDrawClick() 
+    {
+        if(!this.isLegalDraw())
+        {
+            return;
+        }
+
+        this.saveCurrentStateForHistory();
         let playerDeck = this.state.player1Deck;
         let myPile = this.state.myPile;
         
         let randomIndex = Math.floor(Math.random() * myPile.length);
         playerDeck.push(myPile[randomIndex]);
+        myHistory.push(this.getCurrentGameState());
+
         myPile = myPile.filter((item, j) => j !== randomIndex);
 
         this.setState(() => {
@@ -372,7 +450,7 @@ class App extends Component {
                             <button className="my-button" onClick={this.handleDrawClick}>Draw</button>
                         </div>
                         <div>
-                            <button className="my-button">Undo</button>
+                            <button className="my-button" onClick = {this.handelUndoClick}>Undo</button>
                         </div>
                         {this.state.isGameStarted ? myDeck : null}
                     </div>
@@ -381,6 +459,11 @@ class App extends Component {
                 </div>
             </div>
         );
+    }
+
+    handelUndoClick()
+    {
+        this.doPrev();
     }
 }
 
