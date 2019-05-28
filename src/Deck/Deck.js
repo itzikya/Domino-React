@@ -29,7 +29,6 @@ class Deck extends Component {
     }
 
     handleClickedBrick(brick) {
-        console.log(this.props.handleClickedBrick);
         this.props.handleClickedBrick(brick);
     }
 
@@ -51,7 +50,6 @@ class Deck extends Component {
 
     }
     render() {
-        console.log(this.state.myDeck);
         const pickedUpBricks = this.props.myDeck.map(brick => <DominoBrick 
             handleClickedBrick={this.handleClickedBrick}
             handleMouseOver={this.handleMouseOver}
@@ -60,7 +58,6 @@ class Deck extends Component {
             status={this.selectedBrick(brick)}
             key={`brick${brick[0]}${brick[1]}`} 
             />)
-            console.log(pickedUpBricks);
         
         return (
             <div className="deck">

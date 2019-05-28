@@ -3,13 +3,165 @@ import Stats from "./Stats/Stats";
 import Deck from "./Deck/Deck";
 import Board from "./Board/Board";
 import Control from "./Control/Control";
-//import Pile from "./Pile/Pile";
-
 import "./App.css";
 
+
+class StatsTimer
+{
+    constructor()
+    {
+        this.minutes = "00",
+        this.seconds = "00"
+        this.totalSeconds = 0;
+        this.StartTimer = this.StartTimer.bind(this);
+        this.StopTimer = this.StopTimer.bind(this);
+        this.ClearTimerStats = this.ClearTimerStats.bind(this);
+        this._pad = this._pad.bind(this);
+    }
+
+    _pad(val)
+    {
+        let valString = val + "";
+        let res = "";
+        
+        if (valString.length < 2)
+        { 
+            res = "0" + valString;
+        }
+        else 
+        {
+            res = valString;
+        }
+
+        return res;
+    }
+
+    StopTimer() 
+    {
+        clearInterval(this.timer);
+    }
+
+    ClearTimerStats()
+    {
+        this.minutes = "00",
+        this.seconds = "00"
+        this.totalSeconds = 0;
+    }
+
+    StartTimer() 
+    {
+        this.ClearTimerStats();
+        let totalSeconds = 0;
+        let tick = function() 
+        {
+            this.totalSeconds++;
+            totalSeconds++;
+            this.seconds = this._pad(totalSeconds % 60);
+            this.minutes = this._pad(parseInt(totalSeconds / 60));
+        }.bind(this);
+
+
+        this.timer = setInterval(tick, 1000);
+    }
+  
+}
+class Statistics
+{
+    constructor()
+    {
+        this.numOfTurns = 0;                 // 9.1
+        this.timeFromStartSeconds = 0;       // 9.2
+        this.avgTimeOfTurnSeconds = 0;       // 9.3   -- TimeFromStart/numOfTurns
+        this.numOfTileDraws = 0;             // 9.4
+        this.sumOfHandWeight = 0;            // 9.5
+        this.statsTimer = new StatsTimer();
+        
+        this.TurnStart =this.TurnStart.bind(this);
+        this.TurnEnd =this.TurnEnd.bind(this);
+        this.GetTimeString =this.GetTimeString.bind(this);
+        this.Update =this.Update.bind(this);
+        this._updateSumOfHandWeight =this._updateSumOfHandWeight.bind(this);
+        this._updateAvgTimeOfTurn =this._updateAvgTimeOfTurn.bind(this);
+        this._updateTime =this._updateTime.bind(this);
+        this.copyCtr =this.copyCtr.bind(this);
+    }
+
+    copyCtr()
+    {
+        let res = new Statistics();
+        res.numOfTurns = this.numOfTurns;               
+        res.timeFromStartSeconds = this.timeFromStartSeconds;     
+        res.avgTimeOfTurnSeconds = this.avgTimeOfTurnSeconds;     
+        res.numOfTileDraws = this.numOfTileDraws;           
+        res.sumOfHandWeight = this.sumOfHandWeight;     
+        return res;     
+    }
+
+    TurnStart()
+    {
+        this.statsTimer.StartTimer();
+    }
+
+    TurnEnd()
+    {
+        this.statsTimer.StopTimer();
+    }
+
+    Update(i_PlayerHand, moveWasDraw)
+    {
+        if(moveWasDraw)
+        {
+            this.numOfTileDraws ++;
+        }
+
+        this.numOfTurns ++;
+        this._updateSumOfHandWeight(i_PlayerHand);
+        this._updateTime();
+
+        console.log("Number of turns: ", this.numOfTurns);
+        console.log("Time from start: ", this.timeFromStartSeconds);
+        console.log("Number of draws from deck", this.numOfTileDraws);
+        console.log("avg Time in secondes", this.avgTimeOfTurnSeconds);
+        console.log("sum of hand weight", this.sumOfHandWeight);
+
+
+    }
+
+    _updateSumOfHandWeight(i_Hand)
+    {
+        let sum = 0;
+        for (const tile of i_Hand) 
+        {
+            sum += tile[0] + tile[1];
+        }
+
+        this.sumOfHandWeight = sum;
+    }
+
+    _updateTime()
+    {
+        this.timeFromStartSeconds += this.statsTimer.totalSeconds;
+        this._updateAvgTimeOfTurn();
+    }
+
+
+    _updateAvgTimeOfTurn()
+    {
+        this.avgTimeOfTurnSeconds = 0;
+        if(this.numOfTurns > 1)        // wierd bug when doing numOfTurn > 0 we will get NaN on avgTime
+        {
+            this.avgTimeOfTurnSeconds = this.timeFromStartSeconds / this.numOfTurns;
+        }
+    }
+
+    GetTimeString(i_TimeInSeconds)
+    {
+        return `${this.timeFromStartSeconds/60}: ${this.timeFromStartSeconds %60}`;
+    }
+}
 class History 
 {
-    constructor (num, gameStart, p1Deck, boardB, pd, board, pile)
+    constructor (num, gameStart, p1Deck, boardB, pd, board, pile, p1Stats)
     {
         this.numOfPlayers = this.deepClone(num);
         this.isGameStarted = this.deepClone(gameStart);
@@ -18,6 +170,7 @@ class History
         this.playerDeck = this.deepClone(pd);
         this.myBoard = this.deepClone(board);
         this.myPile = this.deepClone(pile);
+        this.player1Stats = p1Stats;
     }
 
     deepClone(x)
@@ -40,6 +193,7 @@ class App extends Component {
             myBoard: [],
             myPile: [],
             history: [],
+            player1Stats: new Statistics(),
         };
 
     this.handleGame = this.handleGame.bind(this);
@@ -57,12 +211,20 @@ class App extends Component {
     this.getCurrentGameState = this.getCurrentGameState.bind(this);
     this.saveCurrentStateForHistory = this.saveCurrentStateForHistory.bind(this);
     this.handelUndoClick = this.handelUndoClick.bind(this);
+    this.nextTurn = this.nextTurn.bind(this);
+    this.updateStatsAfterMove = this.updateStatsAfterMove.bind(this);
     
     }
 
     getCurrentGameState()
     {
-        let currentGameState = new History(this.state.numOfPlayers, this.state.isGameStarted, this.state.player1Deck, this.state.boardBricks, this.state.playerDeck, this.state.myBoard, this.state.myPile);
+        if(this.state.history.length === 1)
+        {
+            this.state.player1Stats = new Statistics();
+        }
+
+        let currentGameState = new History(this.state.numOfPlayers, this.state.isGameStarted, this.state.player1Deck, this.state.boardBricks, this.state.playerDeck, this.state.myBoard, this.state.myPile, this.state.player1Stats.copyCtr());
+       
         return currentGameState;
     }
 
@@ -70,13 +232,11 @@ class App extends Component {
     {
         if(this.state.history.length <= 1)
         {
-            console.log("No Prev moves avilable");
+            console.log("No Prev moves ");
             return;
         }
 
         let prev = this.state.history.pop();
-        console.log("do prev length after", this.state.history.length);
-
         this.setState({
             numOfPlayers: prev.numOfPlayers, 
             isGameStarted: prev.isGameStarted,
@@ -85,6 +245,7 @@ class App extends Component {
             playerDeck: prev.playerDeck,
             myBoard: prev.myBoard,
             myPile: prev.myPile,
+            player1Stats: prev.player1Stats,
         });
     }
 
@@ -119,7 +280,9 @@ class App extends Component {
         this.setState({
             isGameStarted: info.isGameStarted
         });
+
         this.saveCurrentStateForHistory();
+        this.nextTurn();
     }
 
     handlePlayerDeck(deck) {
@@ -147,7 +310,6 @@ class App extends Component {
                 return {selectedBrick: {numbers: brick,
                                             status: "valid"}}})}
 
-        console.log(this.state);
     }
 
     handleClickedBrick(brick) 
@@ -158,10 +320,19 @@ class App extends Component {
             
             this.setState({
                 myBoard: returnedValue.myBoard,
-                player1Deck: returnedValue.player1Deck,})
-            
+                player1Deck: returnedValue.player1Deck,});
+
+            this.updateStatsAfterMove(false);
+            this.nextTurn();
         }
         
+    }
+    
+    nextTurn()
+    {
+        // when we will add multiplayer, we will need to add logic
+        this.state.player1Stats.TurnEnd();
+        this.state.player1Stats.TurnStart();
     }
 
     isLegalMove(i_Brick)
@@ -209,12 +380,11 @@ class App extends Component {
         return JSON.parse(JSON.stringify(x));
     }
 
-    //*****changeToNewOne********/
-    addBrickToBoard(brick) {
-        
+    addBrickToBoard(brick) 
+    {
         let myBoard = this.deepClone(this.state.myBoard);
         let player1Deck = this.state.player1Deck;
-        //let activeBricks = this.state.activeBricks;
+        
         if(!this.isLegalMove(brick))
         {
             return;
@@ -234,18 +404,25 @@ class App extends Component {
             myBoard.push([brickToInsert]);
             player1Deck = player1Deck.filter((item) => item !== brick);
         }
-        else {
+        else 
+        {
             let found = false;
-            for(let i = 0 ; i < myBoard.length ; i++) {
-                for(let j = 0 ; j < myBoard[i].length ; j++) {
+            for(let i = 0 ; i < myBoard.length ; i++) 
+            {
+                for(let j = 0 ; j < myBoard[i].length ; j++) 
+                {
                     let currBrick = myBoard[i][j];
                     //current brick is available from top, and there's a match with the bottom of the wanted brick
-                    if(!found && currBrick.occupied && currBrick.activeTop && currBrick.brick[0] == brick[1]) {
+                    if(!found && currBrick.occupied && currBrick.activeTop && currBrick.brick[0] == brick[1]) 
+                    {
                         currBrick.activeTop = false; //changing
 
-                        for(let i = 0 ; i < myBoard.length ; i++) {
-                            for(let j = 0 ; j < myBoard[i].length ; j++) {
-                                if(myBoard[i][j].occupied) {
+                        for(let i = 0 ; i < myBoard.length ; i++) 
+                        {
+                            for(let j = 0 ; j < myBoard[i].length ; j++) 
+                            {
+                                if(myBoard[i][j].occupied) 
+                                {
                                     myBoard[i][j].position.row++; //changing
                                 }
                             } 
@@ -253,67 +430,77 @@ class App extends Component {
                         
                         //this is changing from one condition to another//////
                         let newLine = [];
-                        for(let i = 0 ; i < myBoard.length ; i++) {
+                        for(let i = 0 ; i < myBoard.length ; i++) 
+                        {
                             newLine.push({occupied: false})
                         }
+
                         myBoard.unshift(newLine);
-    
-                        let brickToInsert = {brick: brick,
-                                            direction: "vertical",
-                                            occupied: true,
-                                            activeTop: true,
-                                            activeBottom: false,
-                                            position: 
-                                                {row: currBrick.position.row - 1,
-                                                column: currBrick.position.column}}
+                        let brickToInsert = {
+                                                brick: brick,
+                                                direction: "vertical",
+                                                occupied: true,
+                                                activeTop: true,
+                                                activeBottom: false,
+                                                position: 
+                                                {
+                                                    row: currBrick.position.row - 1,
+                                                    column: currBrick.position.column
+                                                }
+                                            }
                         ///////////////////////////////////////////////////////////
-                        
                         myBoard[brickToInsert.position.row][brickToInsert.position.column] = brickToInsert;
                         player1Deck = player1Deck.filter((item) => item !== brick);
-
                         found = true;
                     }
 
                     //current brick is available from bottom, and there's a match with the top of the wanted brick
-                    else if(!found && currBrick.occupied && currBrick.activeBottom && currBrick.brick[1] == brick[0]) {
+                    else if(!found && currBrick.occupied && currBrick.activeBottom && currBrick.brick[1] == brick[0]) 
+                    {
                         currBrick.activeBottom = false;
-                       
                         let newLine = [];
-                        for(let i = 0 ; i < myBoard.length ; i++) {
+                        for(let i = 0 ; i < myBoard.length ; i++) 
+                        {
                             newLine.push({occupied: false})
                         }
+
                         myBoard.push(newLine);
-    
-                        let brickToInsert = {brick: brick,
-                                            direction: "vertical",
-                                            occupied: true,
-                                            activeTop: false,
-                                            activeBottom: true,
-                                            position: 
-                                                {row: currBrick.position.row + 1,
-                                                column: currBrick.position.column}}
-                            
+                        let brickToInsert = {
+                                                brick: brick,
+                                                direction: "vertical",
+                                                occupied: true,
+                                                activeTop: false,
+                                                activeBottom: true,
+                                                position: 
+                                                    {
+                                                        row: currBrick.position.row + 1,
+                                                        column: currBrick.position.column
+                                                    }
+                                            }
+                                                    
                         myBoard[brickToInsert.position.row][brickToInsert.position.column] = brickToInsert;
                         player1Deck = player1Deck.filter((item) => item !== brick);
-                        
                         found = true;
-
                     }
                     
                     //current brick is available from the top, and there's a match with the top of the wanted brick
-                    if(!found && currBrick.occupied && currBrick.activeTop && currBrick.brick[0] == brick[0]) {
+                    if(!found && currBrick.occupied && currBrick.activeTop && currBrick.brick[0] == brick[0]) 
+                    {
                         currBrick.activeTop = false;
-
-                        for(let i = 0 ; i < myBoard.length ; i++) {
-                            for(let j = 0 ; j < myBoard[i].length ; j++) {
-                                if(myBoard[i][j].occupied) {
+                        for(let i = 0 ; i < myBoard.length ; i++) 
+                        {
+                            for(let j = 0 ; j < myBoard[i].length ; j++) 
+                            {
+                                if(myBoard[i][j].occupied) 
+                                {
                                     myBoard[i][j].position.row++;
                                 }
                             } 
                         } 
                         
                         let newLine = [];
-                        for(let i = 0 ; i < myBoard.length ; i++) {
+                        for(let i = 0 ; i < myBoard.length ; i++) 
+                        {
                             newLine.push({occupied: false})
                         }
                         myBoard.unshift(newLine);
@@ -329,20 +516,20 @@ class App extends Component {
                             
                         myBoard[brickToInsert.position.row][brickToInsert.position.column] = brickToInsert;
                         player1Deck = player1Deck.filter((item) => item !== brick);
-                        
                         found = true;
                     }
 
                     //current brick is available from bottom, and there's a match with the bottom of the wanted brick
-                    else if(!found && currBrick.occupied && currBrick.activeBottom && currBrick.brick[1] == brick[1]) {
+                    else if(!found && currBrick.occupied && currBrick.activeBottom && currBrick.brick[1] == brick[1]) 
+                    {
                         currBrick.activeBottom = false;
-                      
                         let newLine = [];
-                        for(let i = 0 ; i < myBoard.length ; i++) {
+                        for(let i = 0 ; i < myBoard.length ; i++) 
+                        {
                             newLine.push({occupied: false})
                         }
+
                         myBoard.push(newLine);
-    
                         let brickToInsert = {brick: [brick[1], brick[0]],
                                             direction: "vertical",
                                             occupied: true,
@@ -354,15 +541,12 @@ class App extends Component {
                             
                         myBoard[brickToInsert.position.row][brickToInsert.position.column] = brickToInsert;
                         player1Deck = player1Deck.filter((item) => item !== brick);
-                        
                         found = true;
-
                     }
                 }
             }
         }
 
-        console.log(myBoard);
         return({myBoard: myBoard,
                 player1Deck: player1Deck
         })
@@ -382,15 +566,30 @@ class App extends Component {
 
         return canDrawTile;
     }
-    /*******changeToNewOne*** */
 
     saveCurrentStateForHistory()
     {
         let myHistory = this.deepClone(this.state.history); 
-        myHistory.push(this.getCurrentGameState());
+        let savedHistory =this.getCurrentGameState();
+
+        myHistory.push(savedHistory);
         this.setState(() => {
             return {
                 history: myHistory,
+            }
+        })
+
+
+    }
+
+    updateStatsAfterMove(moveWasDraw)  // make sure to save History before calling this function 
+    {
+        let stats = this.state.player1Stats;
+        let playerHand =this.deepClone(this.state.player1Deck);
+        stats.Update(playerHand, moveWasDraw);
+        this.setState(() => {
+            return {
+                player1Stats: stats,
             }
         })
 
@@ -404,13 +603,12 @@ class App extends Component {
         }
 
         this.saveCurrentStateForHistory();
+
         let playerDeck = this.state.player1Deck;
         let myPile = this.state.myPile;
         
         let randomIndex = Math.floor(Math.random() * myPile.length);
         playerDeck.push(myPile[randomIndex]);
-        myHistory.push(this.getCurrentGameState());
-
         myPile = myPile.filter((item, j) => j !== randomIndex);
 
         this.setState(() => {
@@ -419,6 +617,9 @@ class App extends Component {
                 player1Deck: playerDeck,
             }
         })
+
+        this.updateStatsAfterMove(true);
+        this.nextTurn();
     }
 
     render() {
