@@ -33,8 +33,12 @@
 
 .domino-brick[status="invalid"] {
     background-color: red;
-    
 }
+
+.domino-brick[direction="horizontal"] {
+    transform: rotate(90deg);
+}
+
 /*
 .top {
     background-color: #00A0C7;
