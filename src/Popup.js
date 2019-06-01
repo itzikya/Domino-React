@@ -12,8 +12,8 @@ class Popup extends React.Component {
                 <div className="popup-buttons">
                     <button className="my-button" onClick={this.props.togglePopup}>Redo From Here</button>
                     <div className="history-buttons">
-                        <button className="my-button">Previous</button>
-                        <button className="my-button">Next</button>
+                        <button className="my-button" onClick={this.props.handlePrevClick}>Previous</button>
+                        <button className="my-button" onClick={this.props.handleNextClick}>Next</button>
                     </div>
                 </div>
                 <div className="stats-container">

@@ -1,3 +1,4 @@
+
 .domino-game {
     display: flex;
     flex-direction: column;
@@ -30,7 +31,7 @@ body {
 }
 
 body {
-    /*background-color: rgb(115, 255, 197);*/
+    
     background-image: url("./67037.jpg");
 }
 html, body {
@@ -40,7 +41,7 @@ html, body {
 
 td {
     padding: 0px;
-    /*border: 0.5px solid black;*/
+    
     white-space: nowrap
 }
 
@@ -48,3 +49,4 @@ td {
     display: flex;
     flex-direction: column;
 }
+

@@ -11,6 +11,7 @@ class Board extends Component {
         };
 
         this.renderTable = this.renderTable.bind(this);
+        this.isGlow = this.isGlow.bind(this);
         /*this.handleDrop = this.handleDrop.bind(this);
         this.handleDragOver = this.handleDragOver.bind(this);*/
     }
@@ -25,6 +26,15 @@ class Board extends Component {
         return null;
     }
 
+    isGlow() {
+        if(this.props.status2) {
+            return "yes";
+        }
+        else {
+            return "no";
+        }
+    }
+    
     renderTable() {
         let myTable = this.props.myBoard;
 
@@ -36,6 +46,7 @@ class Board extends Component {
                         return(
                             <td>
                             <DominoBrick status="neutral" 
+                                            status2={this.isGlow()}
                                             numbers={column.brick} 
                                             isDeckBrick={false}
                                             direction={column.direction} 
