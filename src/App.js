@@ -100,8 +100,6 @@ class Statistics {
         this.numOfTurns ++;
         this._updateSumOfHandWeight(playerHand);
         this._updateTime();
-
-        console.log("sum of hand weight", this.sumOfHandWeight);
     }
 
     _updateSumOfHandWeight(hand) {
@@ -215,7 +213,6 @@ class App extends Component {
 
     doUndo() {
         if(this.state.history.length <= 1) {
-            console.log("No Prev moves ");
             return;
         }
 
@@ -340,10 +337,10 @@ class App extends Component {
                                         status: "neutral"}}})
     }
 
+    
     handleDrop(e, con) {
         let id = e.dataTransfer.getData("id");
         let brick = id.split(",").map(Number);
-        console.log(brick);
         this.addBrickToBoard(brick);
     }
 
@@ -975,7 +972,6 @@ class App extends Component {
 
     doNext() {
         if(this.state.next.length < 1) {
-            console.log("No Next moves ");
             return;
         }
 
@@ -994,9 +990,7 @@ class App extends Component {
     }
 
     doPrev() {
-        if(this.state.history.length <= 1) 
-        {
-            console.log("No Prev moves ");
+        if(this.state.history.length <= 1) {
             return;
         }
 
@@ -1037,7 +1031,9 @@ class App extends Component {
         return (
             <div className="domino-game">
                 <div className="body">
-                    <div className="board-container" onDrop={this.handleDrop} onDragOver={this.handleDragOver}>
+                    <div className="board-container" 
+                            onDrop={this.handleDrop} 
+                            onDragOver={this.handleDragOver}>
                         {this.state.isGameStarted ? myBoard : null }
                     </div>
                     <div className="right-nav">

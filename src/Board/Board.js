@@ -45,7 +45,8 @@ class Board extends Component {
                     if(column.occupied) {
                         return(
                             <td>
-                            <DominoBrick status="neutral" 
+                            <DominoBrick key={`brick${column.brick[0]}${column.brick[1]}`} 
+                                            status="neutral" 
                                             status2={this.isGlow()}
                                             numbers={column.brick} 
                                             isDeckBrick={false}
